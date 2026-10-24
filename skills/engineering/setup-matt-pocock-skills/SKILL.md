@@ -73,6 +73,7 @@ When any artifact uses a language other than English, also write the translation
 Show the user a draft of:
 
 - The `## Agent skills` block to add to whichever of `CLAUDE.md` / `AGENTS.md` is being edited (see step 4 for selection rules)
+- The `## Code Review Rules` section for `AGENTS.md`
 - The contents of `docs/agents/issue-tracker.md`, `docs/agents/domain.md`, `docs/agents/triage-labels.md` (only when `triage` is installed), and `docs/agents/language.md` (only when Section D needs a translation table)
 
 Let them edit before writing.
@@ -122,6 +123,16 @@ Write each artifact in the language below, whatever language the conversation is
 Include the `### Triage labels` sub-block, and write `docs/agents/triage-labels.md`, only when `triage` is installed and Section B ran. When it isn't, both are omitted.
 
 The `### Language` table goes inline rather than behind a pointer: skills outside this set (whatever writes commit messages, for one) never open `docs/agents/`, but they all see `CLAUDE.md` / `AGENTS.md`. Drop the "Heading translations" sentence when Section D wrote no translation table.
+
+**Code Review Rules.** Codex reviews (its GitHub integration, and the second opinion in `code-review`) follow the `## Code Review Rules` section of `AGENTS.md`. Add it to `AGENTS.md` if it's missing, pointing at the standards instead of copying them:
+
+```markdown
+## Code Review Rules
+
+Review against the coding standards in `CONTRIBUTING.md`.
+```
+
+Codex doesn't read `CLAUDE.md`, so when only `CLAUDE.md` exists, ask the user whether to create an `AGENTS.md` holding just this section.
 
 When Section B ran on GitHub or GitLab, create each configured label the tracker lacks (`gh label create` / `glab label create`).
 
