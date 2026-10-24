@@ -64,10 +64,10 @@ Start the second opinion first, then issue both sub-agent calls together, in the
 **Second opinion.** Skip it when `codex` isn't on `PATH`, `codex login status` fails, or you are Codex yourself. Otherwise run it as a background shell command so it overlaps the sub-agents:
 
 ```bash
-codex review --base <fixed-point> -c review_model="gpt-6.1-sol" -c model_reasoning_effort="high" 2>/dev/null
+codex review --base <fixed-point> -c review_model="gpt-6.1-sol" -c model_reasoning_effort="high" -c skills.include_instructions=false 2>/dev/null
 ```
 
-Pass no review instructions: a prompt replaces the built-in diff target, and narrowing Codex to an axis throws away what it's for. Stdout carries only the final findings; stderr is its working transcript. Collect the output after the sub-agents return; on a large diff it can take several minutes.
+Pass no review instructions: a prompt replaces the built-in diff target, and narrowing Codex to an axis throws away what it's for. For the same reason, `skills.include_instructions=false` keeps Codex from discovering the installed skills: left on, it loads this very skill and reviews along the two axes instead of its own rubric. Stdout carries only the final findings; stderr is its working transcript. Collect the output after the sub-agents return; on a large diff it can take several minutes.
 
 **Standards sub-agent prompt** should include:
 
