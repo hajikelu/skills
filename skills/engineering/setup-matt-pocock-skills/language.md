@@ -28,6 +28,8 @@ The seed below is Japanese. For another language, replace the right-hand column.
 | Current behavior | 現在の挙動 |
 | Desired behavior | 期待する挙動 |
 | Key interfaces | 主要なインターフェース |
+| Why not now | 今は着手しない理由 |
+| Trigger | 着手する条件 |
 
 ## Never translate
 

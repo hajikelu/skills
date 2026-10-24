@@ -28,12 +28,13 @@ Two **category** roles:
 - `bug`: something is broken
 - `enhancement`: new feature or improvement
 
-Five **state** roles:
+Six **state** roles:
 
 - `needs-triage`: maintainer needs to evaluate
 - `needs-info`: waiting on reporter for more information
 - `ready-for-agent`: fully specified, ready for an AFK agent
 - `ready-for-human`: needs human implementation
+- `needs-evidence`: deferred until real use shows the need; the issue names the trigger that brings it back
 - `wontfix`: will not be actioned
 
 For a PR, the same states read against the attached code: `ready-for-agent` means a brief is attached and an agent should take the next step on the diff; `ready-for-human` means it's ready for a human to merge.
@@ -42,7 +43,7 @@ Every triaged issue should carry exactly one category role and one state role. I
 
 These are canonical role names. The actual label strings used in the issue tracker may differ. The mapping should have been provided to you. If not, tell the user to run `/setup-matt-pocock-skills`.
 
-State transitions: an unlabeled issue normally goes to `needs-triage` first; from there it moves to `needs-info`, `ready-for-agent`, `ready-for-human`, or `wontfix`. `needs-info` returns to `needs-triage` once the reporter replies. The maintainer can override at any time; flag transitions that look unusual and ask before proceeding.
+State transitions: an unlabeled issue normally goes to `needs-triage` first; from there it moves to `needs-info`, `ready-for-agent`, `ready-for-human`, `needs-evidence`, or `wontfix`. `needs-info` returns to `needs-triage` once the reporter replies. `needs-evidence` stays open and returns to `needs-triage` once its trigger fires. Choose `needs-evidence` only when you can name a concrete trigger; a request with no trigger anyone could name is a `wontfix`, not a deferral. The maintainer can override at any time; flag transitions that look unusual and ask before proceeding.
 
 ## Invocation
 
@@ -55,11 +56,12 @@ The maintainer invokes `/triage` and describes what they want in natural languag
 
 ## Show what needs attention
 
-Query the issue tracker and present three buckets, oldest first:
+Query the issue tracker and present four buckets, oldest first:
 
 1. **Unlabeled**: never triaged.
 2. **`needs-triage`**: evaluation in progress.
 3. **`needs-info` with reporter activity since the last triage notes**: needs re-evaluation.
+4. **`needs-evidence` with activity since the last triage notes** (new comments, or other issues linking to it): check whether the trigger has fired.
 
 When PRs are in scope, include external PRs in these buckets and tag each line `[PR]` or `[issue]`. Discovery surfaces only *external* PRs (the tracker config defines who counts as external), so a collaborator's in-flight PR is not triage work. This filter is discovery-only; an explicitly named PR is always triaged regardless of author.
 
@@ -67,7 +69,7 @@ Show counts and a one-line summary per item. Let the maintainer pick.
 
 ## Triage a specific issue or PR
 
-1. **Gather context.** Read the full issue or PR (body, comments, labels, author, dates; for a PR, the diff too). Parse any prior triage notes so you don't re-ask resolved questions. Explore the codebase using the project's domain glossary, respecting ADRs in the area. Run two checks against the codebase: (a) **redundancy**: search for an existing implementation of the requested behavior by domain concept (not just the request's wording), and report where you looked. If found, it's an already-implemented `wontfix` (step 5). (b) **prior rejection**: read `.out-of-scope/*.md` and surface any that resembles this request.
+1. **Gather context.** Read the full issue or PR (body, comments, labels, author, dates; for a PR, the diff too). Parse any prior triage notes so you don't re-ask resolved questions. Explore the codebase using the project's domain glossary, respecting ADRs in the area. Run three checks: (a) **redundancy**: search for an existing implementation of the requested behavior by domain concept (not just the request's wording), and report where you looked. If found, it's an already-implemented `wontfix` (step 5). (b) **prior rejection**: read `.out-of-scope/*.md` and surface any that resembles this request. (c) **pending evidence**: read the trigger of each open `needs-evidence` issue. If this issue meets one, surface it: the outcome then includes a comment on that issue linking this one as evidence, and a recommendation to move it back to `needs-triage`.
 
 2. **Recommend.** Tell the maintainer your category and state recommendation with reasoning, plus a brief codebase summary relevant to the request (including whether it's already implemented). Wait for direction.
 
@@ -79,6 +81,7 @@ Show counts and a one-line summary per item. Let the maintainer pick.
    - `ready-for-agent`: post an agent brief comment ([AGENT-BRIEF.md](AGENT-BRIEF.md)).
    - `ready-for-human`: same structure as an agent brief, but note why it can't be delegated (judgment calls, external access, design decisions, manual testing).
    - `needs-info`: post triage notes (template below).
+   - `needs-evidence`: post the deferral (template below) and leave the issue open.
    - For `wontfix`, close the issue, with the comment depending on *why*:
      - **Already implemented**: the change already exists in the codebase. Point to where it lives; do **not** write to `.out-of-scope/` (that KB is for *rejected* requests, not built ones).
      - **Rejected (bug)**: give a polite explanation, then close.
@@ -106,6 +109,23 @@ If the maintainer says "move #42 to ready-for-agent", trust them and apply the r
 ```
 
 Capture everything resolved during grilling under "established so far" so the work isn't lost. Questions must be specific and actionable, not "please provide more info".
+
+## Needs-evidence template
+
+```markdown
+## Why not now
+
+Why the need isn't shown yet: what covers it today, and what doing it now would cost.
+
+## Trigger
+
+Start work when any of these happens:
+
+- an observable event, e.g. "an unintended visual change reached `main`"
+- another one
+```
+
+Each trigger is an event someone could point at, not a feeling ("when it becomes important"). Where an issue already carries these sections in its body, don't post them again.
 
 ## Resuming a previous session
 
