@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: "Review the changes since a fixed point (commit, branch, tag, or merge-base) along two axes: Standards (does the code follow this repo's documented coding standards?) and Spec (does the code match what the originating issue/spec asked for?). Runs both reviews in parallel sub-agents, plus an unscoped Codex review as a cross-model second opinion when the Codex CLI is available (and an adversarial one on request), and reports them side by side. Use when the user wants to review a branch, a PR, work-in-progress changes, or asks to \"review since X\"."
+description: "Review the changes since a fixed point (commit, branch, tag, or merge-base) along two axes: Standards (does the code follow this repo's documented coding standards?) and Spec (does the code match what the originating issue/spec asked for?). Runs both reviews in parallel sub-agents, plus an unscoped Codex review as a cross-model second opinion when the Codex CLI is available (and an adversarial one on request or for high-stakes changes), and reports them side by side. Use when the user wants to review a branch, a PR, work-in-progress changes, or asks to \"review since X\"."
 ---
 
 Two-axis review of the diff between `HEAD` and a fixed point the user supplies:
@@ -69,7 +69,7 @@ codex review --base <fixed-point> -c review_model="gpt-6.1-sol" -c model_reasoni
 
 Pass no review instructions: a prompt replaces the built-in diff target, and narrowing Codex to an axis throws away what it's for. For the same reason, `skills.include_instructions=false` keeps Codex from discovering the installed skills: left on, it loads this very skill and reviews along the two axes instead of its own rubric. Stdout carries only the final findings; stderr is its working transcript. Collect the output after the sub-agents return; on a large diff it can take several minutes.
 
-**Adversarial second opinion**, only when the user asks for an adversarial review. Run it alongside the regular second opinion, under the same skip conditions:
+**Adversarial second opinion**, when the user asks for one, or when the diff touches a surface where a quiet failure is costly: auth or permissions; money; data deletion or other irreversible state changes; side effects outside the system that can't be taken back, such as sending mail or calling an external API; concurrency or ordering (an await between a read and the write that depends on it, retries, queues); migrations; input validation at a trust boundary; or a config default or environment setting that can reach production. When you add it on your own, say why in one line of the report. Run it alongside the regular second opinion, under the same skip conditions:
 
 ```bash
 codex exec -C <repo> -m gpt-6.1-sol -s read-only --ephemeral -c model_reasoning_effort="high" -c skills.include_instructions=false -o <report-file> "<brief>"
