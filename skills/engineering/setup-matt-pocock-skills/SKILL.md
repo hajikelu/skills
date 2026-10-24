@@ -11,6 +11,7 @@ Scaffold the per-repo configuration that the engineering skills assume:
 - **Issue tracker**: where issues live (GitHub by default; local markdown is also supported out of the box)
 - **Triage labels**: the strings used for the five canonical triage roles
 - **Domain docs**: where `docs/GLOSSARY.md` and ADRs live, and the consumer rules for reading them
+- **Language**: which language each artifact (commit messages, PRs, issues) is written in, and a translation table for the English template headings the skills emit
 
 This is a prompt-driven skill, not a deterministic script. Explore, present what you found, confirm with the user, then write.
 
@@ -27,6 +28,7 @@ Look at the current repo to understand its starting state. Read whatever exists;
 - `docs/agents/`: does this skill's prior output already exist?
 - `.scratch/`: a sign that a local-markdown issue tracker convention is already in use
 - Is the `triage` skill installed? (a `triage` skill folder alongside this one, or `triage` in your available skills.) This decides whether Section B runs at all.
+- Existing artifact language: recent `git log` subjects and bodies, and recent issue and PR titles and bodies on the tracker. Which language does each one use today?
 - Monorepo signals: a `pnpm-workspace.yaml`, a `workspaces` field in `package.json`, or a populated `packages/*` with its own `src/`. These are present only in a genuinely large multi-package repo; their absence means single-context, which is almost every repo.
 
 ### 2. Present findings and ask
@@ -60,12 +62,18 @@ The defaults are the five canonical roles, each label string equal to its name: 
 
 Offer **multi-context** (a root `docs/GLOSSARY-MAP.md` pointing to per-context `docs/GLOSSARY.md` files) only when exploration found monorepo signals. Then confirm which layout they want.
 
+**Section D: Language.** Ask which language each artifact is written in: commit messages, PR titles, PR bodies, issue titles, and issue bodies (issue and PR comments follow their body). Recommend whatever exploration found each one already uses; when the repo has no history to go on, ask without a recommendation. Mixed answers are normal, e.g. English for commits, PRs, and issue titles, Japanese for issue bodies.
+
+> Explainer: Skills like `to-spec`, `to-tickets`, and `triage` emit English template headings ("Acceptance criteria", "Out of scope"). When a body is written in another language, a translation table keeps those headings rendered the same way every time.
+
+When any artifact uses a language other than English, also write the translation table, seeded from [language.md](./language.md); show it in step 3 so the user can adjust terms. When every artifact is English, skip the table.
+
 ### 3. Confirm and edit
 
 Show the user a draft of:
 
 - The `## Agent skills` block to add to whichever of `CLAUDE.md` / `AGENTS.md` is being edited (see step 4 for selection rules)
-- The contents of `docs/agents/issue-tracker.md`, `docs/agents/domain.md`, and `docs/agents/triage-labels.md` (the last only when `triage` is installed)
+- The contents of `docs/agents/issue-tracker.md`, `docs/agents/domain.md`, `docs/agents/triage-labels.md` (only when `triage` is installed), and `docs/agents/language.md` (only when Section D needs a translation table)
 
 Let them edit before writing.
 
@@ -97,9 +105,23 @@ The block:
 ### Domain docs
 
 [one-line summary of layout: "single-context" or "multi-context"]. See `docs/agents/domain.md`.
+
+### Language
+
+Write each artifact in the language below, whatever language the conversation is in. Heading translations: see `docs/agents/language.md`.
+
+| Artifact | Language |
+| --- | --- |
+| Commit message | [language] |
+| PR title | [language] |
+| PR body | [language] |
+| Issue title | [language] |
+| Issue body | [language] |
 ```
 
 Include the `### Triage labels` sub-block, and write `docs/agents/triage-labels.md`, only when `triage` is installed and Section B ran. When it isn't, both are omitted.
+
+The `### Language` table goes inline rather than behind a pointer: skills outside this set (whatever writes commit messages, for one) never open `docs/agents/`, but they all see `CLAUDE.md` / `AGENTS.md`. Drop the "Heading translations" sentence when Section D wrote no translation table.
 
 When Section B ran on GitHub or GitLab, create each configured label the tracker lacks (`gh label create` / `glab label create`).
 
@@ -110,6 +132,7 @@ Then write the docs files using the seed templates in this skill folder as a sta
 - [issue-tracker-local.md](./issue-tracker-local.md): local-markdown issue tracker
 - [triage-labels.md](./triage-labels.md): label mapping (only if `triage` is installed)
 - [domain.md](./domain.md): domain doc consumer rules + layout
+- [language.md](./language.md): heading translation table (only if Section D needs one)
 
 For "other" issue trackers, write `docs/agents/issue-tracker.md` from scratch using the user's description.
 
