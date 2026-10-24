@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: "Review the changes since a fixed point (commit, branch, tag, or merge-base) along two axes: Standards (does the code follow this repo's documented coding standards?) and Spec (does the code match what the originating issue/spec asked for?). Runs both reviews in parallel sub-agents, plus an unscoped Codex review as a cross-model second opinion when the Codex CLI is available, and reports them side by side. Use when the user wants to review a branch, a PR, work-in-progress changes, or asks to \"review since X\"."
+description: "Review the changes since a fixed point (commit, branch, tag, or merge-base) along two axes: Standards (does the code follow this repo's documented coding standards?) and Spec (does the code match what the originating issue/spec asked for?). Runs both reviews in parallel sub-agents, plus an unscoped Codex review as a cross-model second opinion when the Codex CLI is available (and an adversarial one on request), and reports them side by side. Use when the user wants to review a branch, a PR, work-in-progress changes, or asks to \"review since X\"."
 ---
 
 Two-axis review of the diff between `HEAD` and a fixed point the user supplies:
@@ -69,6 +69,18 @@ codex review --base <fixed-point> -c review_model="gpt-6.1-sol" -c model_reasoni
 
 Pass no review instructions: a prompt replaces the built-in diff target, and narrowing Codex to an axis throws away what it's for. For the same reason, `skills.include_instructions=false` keeps Codex from discovering the installed skills: left on, it loads this very skill and reviews along the two axes instead of its own rubric. Stdout carries only the final findings; stderr is its working transcript. Collect the output after the sub-agents return; on a large diff it can take several minutes.
 
+**Adversarial second opinion**, only when the user asks for an adversarial review. Run it alongside the regular second opinion, under the same skip conditions:
+
+```bash
+codex exec -C <repo> -m gpt-6.1-sol -s read-only --ephemeral -c model_reasoning_effort="high" -c skills.include_instructions=false -o <report-file> "<brief>"
+```
+
+The brief, with the fixed point filled in:
+
+> Review the change from `git diff <fixed-point>...HEAD` in this repo, and try to find the strongest reasons it should not ship. Assume it fails until the code shows otherwise. Trace callers outside the diff; inputs at the edges (empty, whitespace-only, missing, huge); concurrent or interleaved operations, retries, and partial failures; and every assumption a comment, commit message, or PR states that another code path could break. Report only issues you can support from the code, each with `file:line`, the scenario that triggers it, and a priority tag from `[P0]` to `[P3]`. Don't edit files.
+
+The built-in reviewer reports only what it can prove the diff broke, which keeps it quiet; this brief makes Codex go looking. Read `<report-file>` after the sub-agents return.
+
 **Standards sub-agent prompt** should include:
 
 - The full diff command and commit list.
@@ -87,7 +99,7 @@ If the spec is missing, skip the Spec sub-agent and note this in the final repor
 
 Present the two reports under `## Standards` and `## Spec` headings, verbatim or lightly cleaned. Do **not** merge or rerank findings, because the two axes are deliberately separate (see _Why two axes_).
 
-Present the Codex findings under `## Second opinion (Codex)`, keeping its priority tags (`[P1]` and so on). Don't fold them into the axes. Instead, tag each one that matches a Standards or Spec finding with `(also under Standards)` or `(also under Spec)`; leave the rest untagged. If the second opinion was skipped, say why in one line.
+Present the Codex findings under `## Second opinion (Codex)`, keeping its priority tags (`[P1]` and so on). Don't fold them into the axes. Instead, tag each one that matches a Standards or Spec finding with `(also under Standards)` or `(also under Spec)`; leave the rest untagged. If the second opinion was skipped, say why in one line. Present an adversarial second opinion the same way, under `## Second opinion (Codex, adversarial)`.
 
 End with a one-line summary: total findings per axis, and the worst issue _within each axis_ (if any), plus the number of second-opinion findings that neither axis raised. Don't pick a single winner across axes: that's the reranking the separation exists to prevent.
 
