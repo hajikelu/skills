@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: "Review the changes since a fixed point (commit, branch, tag, or merge-base) along two axes: Standards (does the code follow this repo's documented coding standards?) and Spec (does the code match what the originating issue/spec asked for?). Runs both reviews in parallel sub-agents and reports them side by side. Use when the user wants to review a branch, a PR, work-in-progress changes, or asks to \"review since X\"."
+description: "Review the changes since a fixed point (commit, branch, tag, or merge-base) along two axes: Standards (does the code follow this repo's documented coding standards?) and Spec (does the code match what the originating issue/spec asked for?). Runs both reviews in parallel sub-agents, plus an unscoped Codex review as a cross-model second opinion when the Codex CLI is available, and reports them side by side. Use when the user wants to review a branch, a PR, work-in-progress changes, or asks to \"review since X\"."
 ---
 
 Two-axis review of the diff between `HEAD` and a fixed point the user supplies:
@@ -9,6 +9,8 @@ Two-axis review of the diff between `HEAD` and a fixed point the user supplies:
 - **Spec**: does the code faithfully implement the originating issue / spec?
 
 Both axes run as **parallel sub-agents** so they don't pollute each other's context, then this skill aggregates their findings.
+
+Alongside them, a **second opinion** from Codex reviews the same diff with no axis at all (see _Why a second opinion_).
 
 The issue tracker should have been provided to you. If not, tell the user to run `/setup-matt-pocock-skills`.
 
@@ -55,9 +57,17 @@ Each smell reads *what it is* → *how to fix*; match it against the diff:
 - **Middle Man**: a class or function that mostly just delegates onward. → cut it, call the real target direct.
 - **Refused Bequest**: a subclass or implementer that ignores or overrides most of what it inherits. → drop the inheritance, use composition.
 
-### 4. Spawn both sub-agents in parallel
+### 4. Launch the reviews in parallel
 
-Issue both sub-agent calls together, in the foreground, and aggregate the reports they return.
+Start the second opinion first, then issue both sub-agent calls together, in the foreground, and aggregate the reports they return.
+
+**Second opinion.** Skip it when `codex` isn't on `PATH`, `codex login status` fails, or you are Codex yourself. Otherwise run it as a background shell command so it overlaps the sub-agents:
+
+```bash
+codex review --base <fixed-point> -c review_model="gpt-6.1-sol" -c model_reasoning_effort="high" 2>/dev/null
+```
+
+Pass no review instructions: a prompt replaces the built-in diff target, and narrowing Codex to an axis throws away what it's for. Stdout carries only the final findings; stderr is its working transcript. Collect the output after the sub-agents return; on a large diff it can take several minutes.
 
 **Standards sub-agent prompt** should include:
 
@@ -77,7 +87,9 @@ If the spec is missing, skip the Spec sub-agent and note this in the final repor
 
 Present the two reports under `## Standards` and `## Spec` headings, verbatim or lightly cleaned. Do **not** merge or rerank findings, because the two axes are deliberately separate (see _Why two axes_).
 
-End with a one-line summary: total findings per axis, and the worst issue _within each axis_ (if any). Don't pick a single winner across axes: that's the reranking the separation exists to prevent.
+Present the Codex findings under `## Second opinion (Codex)`, keeping its priority tags (`[P1]` and so on). Don't fold them into the axes. Instead, tag each one that matches a Standards or Spec finding with `(also under Standards)` or `(also under Spec)`; leave the rest untagged. If the second opinion was skipped, say why in one line.
+
+End with a one-line summary: total findings per axis, and the worst issue _within each axis_ (if any), plus the number of second-opinion findings that neither axis raised. Don't pick a single winner across axes: that's the reranking the separation exists to prevent.
 
 ## Why two axes
 
@@ -87,3 +99,7 @@ A change can pass one axis and fail the other:
 - Code that does exactly what the issue asked but breaks the project's conventions → **Spec pass, Standards fail.**
 
 Reporting them separately stops one axis from masking the other.
+
+## Why a second opinion
+
+Two sub-agents running the same model share its blind spots. A reviewer from a different model family misses different things, so its findings that neither axis raised are the payoff. It reviews unscoped on purpose: overlap with the axes is expected, and agreement across model families raises confidence in a finding.
