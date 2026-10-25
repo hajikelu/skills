@@ -30,6 +30,20 @@ The seed below is Japanese. For another language, replace the right-hand column.
 | Key interfaces | 主要なインターフェース |
 | Why not now | 今は着手しない理由 |
 | Trigger | 着手する条件 |
+| Triage Notes | トリアージメモ |
+| What we've established so far | ここまでに分かったこと |
+| What we still need from you | 追加で教えてほしいこと |
+| Evidence | 動作確認 |
+| Before | 変更前 |
+| After | 変更後 |
+| Merge Danger | マージのリスク |
+| Door | 後戻りの可否 |
+| Blast Radius | 影響範囲 |
+| Destination | ゴール |
+| Notes | メモ |
+| Decisions so far | これまでの決定 |
+| Not yet specified | 未確定 |
+| Question | 問い |
 
 ## Never translate
 

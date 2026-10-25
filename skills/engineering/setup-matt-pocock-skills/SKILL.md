@@ -1,6 +1,6 @@
 ---
 name: setup-matt-pocock-skills
-description: "Configure this repo for the engineering skills: set up its issue tracker, triage label vocabulary, and domain doc layout. Run once before first use of the other engineering skills."
+description: "Configure this repo for the engineering skills: set up its issue tracker, triage label vocabulary, domain doc layout, and artifact language. Run once before first use of the other engineering skills."
 disable-model-invocation: true
 ---
 
@@ -11,7 +11,7 @@ Scaffold the per-repo configuration that the engineering skills assume:
 - **Issue tracker**: where issues live (GitHub by default; local markdown is also supported out of the box)
 - **Triage labels**: the strings used for the six canonical triage roles
 - **Domain docs**: where `docs/GLOSSARY.md` and ADRs live, and the consumer rules for reading them
-- **Language**: which language each artifact (commit messages, PRs, issues) is written in, and a translation table for the English template headings the skills emit
+- **Language**: which language each artifact (commit messages, PRs, issues, code comments) is written in, and a translation table for the English template headings the skills emit
 
 This is a prompt-driven skill, not a deterministic script. Explore, present what you found, confirm with the user, then write.
 
@@ -28,7 +28,7 @@ Look at the current repo to understand its starting state. Read whatever exists;
 - `docs/agents/`: does this skill's prior output already exist?
 - `.scratch/`: a sign that a local-markdown issue tracker convention is already in use
 - Is the `triage` skill installed? (a `triage` skill folder alongside this one, or `triage` in your available skills.) This decides whether Section B runs at all.
-- Existing artifact language: recent `git log` subjects and bodies, and recent issue and PR titles and bodies on the tracker. Which language does each one use today?
+- Existing artifact language: recent `git log` subjects and bodies, recent issue and PR titles and bodies on the tracker, and comments in the source files. Which language does each one use today?
 - Monorepo signals: a `pnpm-workspace.yaml`, a `workspaces` field in `package.json`, or a populated `packages/*` with its own `src/`. These are present only in a genuinely large multi-package repo; their absence means single-context, which is almost every repo.
 
 ### 2. Present findings and ask
@@ -62,7 +62,7 @@ The defaults are the six canonical roles, each label string equal to its name: `
 
 Offer **multi-context** (a root `docs/GLOSSARY-MAP.md` pointing to per-context `docs/GLOSSARY.md` files) only when exploration found monorepo signals. Then confirm which layout they want.
 
-**Section D: Language.** Ask which language each artifact is written in: commit messages, PR titles, PR bodies, issue titles, and issue bodies (issue and PR comments follow their body). Recommend whatever exploration found each one already uses; when the repo has no history to go on, ask without a recommendation. Mixed answers are normal, e.g. English for commits, PRs, and issue titles, Japanese for issue bodies.
+**Section D: Language.** Ask which language each artifact is written in: commit messages, PR titles, PR bodies, issue titles, issue bodies, and code comments (doc comments included). Recommend whatever exploration found each one already uses; when the repo has no history to go on, ask without a recommendation. Mixed answers are normal, e.g. English for commits, PRs, and issue titles, Japanese for issue bodies.
 
 > Explainer: Skills like `to-spec`, `to-tickets`, and `triage` emit English template headings ("Acceptance criteria", "Out of scope"). When a body is written in another language, a translation table keeps those headings rendered the same way every time.
 
@@ -109,7 +109,7 @@ The block:
 
 ### Language
 
-Write each artifact in the language below, whatever language the conversation is in. Heading translations: see `docs/agents/language.md`.
+Write each artifact in the language below, whatever language the conversation is in. Issue and PR comments follow their body. Heading translations: see `docs/agents/language.md`.
 
 | Artifact | Language |
 | --- | --- |
@@ -118,6 +118,7 @@ Write each artifact in the language below, whatever language the conversation is
 | PR body | [language] |
 | Issue title | [language] |
 | Issue body | [language] |
+| Code comment | [language] |
 ```
 
 Include the `### Triage labels` sub-block, and write `docs/agents/triage-labels.md`, only when `triage` is installed and Section B ran. When it isn't, both are omitted.
