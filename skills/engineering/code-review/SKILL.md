@@ -64,15 +64,15 @@ Start the second opinion first, then issue both sub-agent calls together, in the
 **Second opinion.** Skip it when `codex` isn't on `PATH`, `codex login status` fails, or you are Codex yourself. Otherwise run it as a background shell command so it overlaps the sub-agents:
 
 ```bash
-codex review --base <fixed-point> -c review_model="gpt-6.1-sol" -c model_reasoning_effort="high" -c skills.include_instructions=false 2>/dev/null
+codex review --base <fixed-point> -c sandbox_mode="workspace-write" -c review_model="gpt-6.1-sol" -c model_reasoning_effort="high" -c skills.include_instructions=false 2>/dev/null
 ```
 
-Pass no review instructions: a prompt replaces the built-in diff target, and narrowing Codex to an axis throws away what it's for. For the same reason, `skills.include_instructions=false` keeps Codex from discovering the installed skills: left on, it loads this very skill and reviews along the two axes instead of its own rubric. Stdout carries only the final findings; stderr is its working transcript. Collect the output after the sub-agents return; on a large diff it can take several minutes.
+Pass no review instructions: a prompt replaces the built-in diff target, and narrowing Codex to an axis throws away what it's for. For the same reason, `skills.include_instructions=false` keeps Codex from discovering the installed skills: left on, it loads this very skill and reviews along the two axes instead of its own rubric. `sandbox_mode="workspace-write"` lets it run the lint and tests: under the read-only sandbox they fail before they start, since Vite writes its bundled config to `node_modules/.vite-temp/` and git writes a temporary file to verify commit signatures. Stdout carries only the final findings; stderr is its working transcript. Collect the output after the sub-agents return; on a large diff it can take several minutes.
 
 **Adversarial second opinion**, when the user asks for one, or when the diff touches a surface where a quiet failure is costly: auth or permissions; money; data deletion or other irreversible state changes; side effects outside the system that can't be taken back, such as sending mail or calling an external API; concurrency or ordering (an await between a read and the write that depends on it, retries, queues); migrations; input validation at a trust boundary; or a config default or environment setting that can reach production. When you add it on your own, say why in one line of the report. Run it alongside the regular second opinion, under the same skip conditions:
 
 ```bash
-codex exec -C <repo> -m gpt-6.1-sol -s read-only --ephemeral -c model_reasoning_effort="high" -c skills.include_instructions=false -o <report-file> "<brief>"
+codex exec -C <repo> -m gpt-6.1-sol -s workspace-write --ephemeral -c model_reasoning_effort="high" -c skills.include_instructions=false -o <report-file> "<brief>"
 ```
 
 The brief, with the fixed point filled in:
